@@ -36,6 +36,7 @@ sampleinfo[sampleinfo == "" | sampleinfo == " "] <- NA
 
 # Read .csv file of phenoData from metadata.
 annot <- read.csv("data/phenowLot.csv", stringsAsFactors=FALSE, check.names=FALSE, header=TRUE, row.names=1)
+feature <- read.csv("finalFeatureNAs.csv", stringAsFactors=FALSE, check.names=FALSE, header=TRUE, row.names=1)
 
 pData(eset) <- as.data.frame(sampleinfo[match(gsub("[.]CEL[.]gz$", "", rownames(pData(eset))), rownames(sampleinfo)), , drop=FALSE])
 colnames(exprs(eset)) <- rownames(pData(eset)) <- gsub("[.]CEL[.]gz$", "", colnames(exprs(eset)))
@@ -45,9 +46,9 @@ exprs(eset) <- exprs(eset)[which(!rownames(exprs(eset)) %in% controls), , drop=F
 ensemblIds <- sapply(strsplit(rownames(exprs(eset)), "_"), function (x) { return (x[[1]]) }) 
 fData(eset) <- data.frame("Probe"=rownames(exprs(eset)), 
                           "EnsemblGeneId"=ensemblIds,
-                          "EntrezGeneId"=annot[ensemblIds, "EntrezGene.ID"],
-                          "Symbol"=annot[ensemblIds, "gene_name"],
-                          "GeneBioType"=annot[ensemblIds, "gene_biotype"],
+                          "EntrezGeneId"=feature[ensemblIds, "EntrezGene.ID"],
+                          "Symbol"=feature[ensemblIds, "gene_name"],
+                          "GeneBioType"=feature[ensemblIds, "gene_biotype"],
                           "BEST"=TRUE)
 rownames(fData(eset)) <- rownames(exprs(eset))
 pData(eset)[,"batchid"] <- NA
