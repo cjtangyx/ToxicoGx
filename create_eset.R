@@ -34,23 +34,31 @@ path.sc=file.path("data")
 sampleinfo <- read.table(file.path(path.sc, "TGGATEsfeatureInfo.txt"), sep="\t")
 sampleinfo[sampleinfo == "" | sampleinfo == " "] <- NA
 
-# Read .csv file of phenoData from metadata.
+# Read annotations file and feature info .csv files.
 annot <- read.csv("data/phenowLot.csv", stringsAsFactors=FALSE, check.names=FALSE, header=TRUE, row.names=1)
-feature <- read.csv("finalFeatureNAs.csv", stringAsFactors=FALSE, check.names=FALSE, header=TRUE, row.names=1)
+Featuredata <- read.csv("data/finalFeatureNAs.csv", stringAsFactors=FALSE, check.names=FALSE, header=TRUE, row.names=1)
 
+# Map phenodata to rows and columns of eset.
 pData(eset) <- as.data.frame(sampleinfo[match(gsub("[.]CEL[.]gz$", "", rownames(pData(eset))), rownames(sampleinfo)), , drop=FALSE])
 colnames(exprs(eset)) <- rownames(pData(eset)) <- gsub("[.]CEL[.]gz$", "", colnames(exprs(eset)))
 controls <- rownames(exprs(eset))[grep("AFFX", rownames(exprs(eset)))]
-fData(eset) <- fData(eset)[which(!rownames(fData(eset)) %in% controls), , drop=FALSE]
-exprs(eset) <- exprs(eset)[which(!rownames(exprs(eset)) %in% controls), , drop=FALSE]
-ensemblIds <- sapply(strsplit(rownames(exprs(eset)), "_"), function (x) { return (x[[1]]) }) 
-fData(eset) <- data.frame("Probe"=rownames(exprs(eset)), 
-                          "EnsemblGeneId"=ensemblIds,
-                          "EntrezGeneId"=feature[ensemblIds, "EntrezGene.ID"],
-                          "Symbol"=feature[ensemblIds, "gene_name"],
-                          "GeneBioType"=feature[ensemblIds, "gene_biotype"],
-                          "BEST"=TRUE)
-rownames(fData(eset)) <- rownames(exprs(eset))
-pData(eset)[,"batchid"] <- NA
-annotation(eset) <- "rna"
-saveRDS(eset, file="eset_final.rds")
+
+# Map feature data to eset.
+fData(eset) <- Featuredata
+
+# Identify probe names in eset.
+probes <- eset@assayData$exprs
+
+# Subset eset without AFFX control probes.
+neweset <- subset(eset, substr(rownames(probes), 0, 4) != "AFFX")
+
+# Map probe names from feature data file to no-AFFX eset.
+rownames(neweset) <- Featuredata$gene_id
+
+# Map new eset (no AFFX probes) to feature info .
+featureEset <- neweset
+
+# Save the eset, read it.
+saveRDS(featureEset, file='feature_eset.rds')
+final <- readRDS('feature_eset.rds')
+final
