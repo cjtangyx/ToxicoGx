@@ -1,5 +1,5 @@
 # extract from phenodata file
-phenodata <- read.csv("C:/Users/amytx/OneDrive - UHN/tggates/phenowLot.csv",sep=",",header=TRUE, stringsAsFactors=TRUE)
+phenodata <- read.csv("data/phenowLot.csv",sep=",",header=TRUE, stringsAsFactors=TRUE)
 
 # subset necessary columns
 cellObject <- subset(phenodata, select=c(X, ORGAN_ID, MATERIAL_ID, SPECIES, TEST_TYPE, CELL_LOT_TYPE))
